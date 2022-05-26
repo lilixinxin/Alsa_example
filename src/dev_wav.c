@@ -2,7 +2,7 @@
 #include <string.h>
 #include "dev_wav.h"
 
-#if 1
+
 int Wave_Parse_Head(char *wav_name, Wave_head* headinfo, FILE **fp)
 {
     //FILE *fp;
@@ -30,4 +30,3 @@ int Wave_Parse_Head(char *wav_name, Wave_head* headinfo, FILE **fp)
 
     return 0;
 }
-#endif

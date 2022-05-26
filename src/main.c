@@ -7,7 +7,9 @@
 #include <string.h>
 #include <pthread.h>
 #include "dev_wav.h"
+#include "dev_alsa.h"
 
+#if 0
 int rate = 44100;
 int periods = 20;
 snd_pcm_uframes_t periodsize = 8192; /* Periodsize (bytes) */
@@ -17,12 +19,14 @@ unsigned char *data;
 int pcmreturn, l1, l2;
 short s1, s2;
 int frames;
+#endif
 static Wave_head Head_file;
-
+static Pcm_params pcm;
 int main(int argc, char *argv[])
 {
     FILE *fp;
     int ret;
+    char *buff = NULL;
 
     char *wavefile = strdup(argv[1]);
     printf("wave file name:%s\n", wavefile);
@@ -33,7 +37,52 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-#if 1
+    //把wav获得参数配置给alsa
+    //pcm.pcm_card_name = strdup(argv[2]);
+    strcpy(pcm.pcm_card_name, argv[2]);
+    pcm.channel_num = Head_file.chanel_num;
+    pcm.sample_rate = Head_file.sample_rate;
+    pcm.stream_direction = SND_PCM_STREAM_PLAYBACK;
+    pcm.periods = 10;
+    pcm.sample_format = SND_PCM_FORMAT_S16_LE;
+    pcm.access_type = SND_PCM_ACCESS_RW_INTERLEAVED;
+    pcm.period_szie = 8192;
+    pcm.frames = (pcm.period_szie * pcm.periods) >> 2;
+
+    Alsa_Dev_init(&pcm);
+    //申请buff空间
+    int buffsize = pcm.period_szie * pcm.periods;
+    buff = (char *)malloc(buffsize);
+    if(buff == NULL)
+    {
+        fprintf(stderr, "malloc fail\n");
+        return -1;
+    }
+
+    while(1)
+    {
+        ret = fread(buff, 1, buffsize, fp);
+        printf("read buff len, :%d\n", ret);
+        if(ret == 0){
+            printf("end of music file input! \n");
+           exit(1);
+        }
+    
+        if(ret < 0){
+            printf("read pcm from file! \n");
+            exit(1);
+        }
+        while ((ret = snd_pcm_writei(pcm.pcm_handle, buff, pcm.frames)) < 0) {
+            snd_pcm_prepare(pcm.pcm_handle);
+            fprintf(stderr, "<<<<<<<<<<<<<<< Buffer Underrun >>>>>>>>>>>>>>>\n");
+      }
+        //Alsa_Playback(&pcm, &buff);
+    }
+    
+    Pcm_CloseDevice(&pcm);
+
+
+#if 0
     //handle for alsa_device
     snd_pcm_t *pcm_handle;
     //pcm stream direction
@@ -142,7 +191,7 @@ int main(int argc, char *argv[])
         printf("read pcm from file! \n");
         exit(1);
     }
-        while ((pcmreturn = snd_pcm_writei(pcm_handle, buff, frames)) < 0) {
+    while ((pcmreturn = snd_pcm_writei(pcm_handle, buff, frames)) < 0) {
             snd_pcm_prepare(pcm_handle);
             fprintf(stderr, "<<<<<<<<<<<<<<< Buffer Underrun >>>>>>>>>>>>>>>\n");
       }

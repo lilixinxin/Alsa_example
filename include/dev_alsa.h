@@ -33,6 +33,6 @@ typedef struct pcm_params {
 int Alsa_Dev_init(Pcm_params *pcm);
 int Alsa_Playback(Pcm_params *pcm, char **buf);
 int Pcm_CloseDevice(Pcm_params *pcm);
-
+int Alsa_SetVolum(int mode, int ctr_value);
 
 #endif

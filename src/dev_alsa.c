@@ -95,3 +95,54 @@ int Pcm_CloseDevice(Pcm_params *pcm)
 
     return 0;
 }
+
+int Alsa_SetVolum(int mode, int ctr_value)
+{
+    snd_mixer_t *mixer;
+    snd_mixer_elem_t *elem;
+    snd_mixer_selem_channel_id_t channel;
+    long value;
+    long min_value, max_value;
+    //open mixer
+    snd_mixer_open(&mixer, 0);
+
+    //连接到指定的pcm
+    snd_mixer_attach(mixer, "default");
+    //注册mixer
+    snd_mixer_selem_register(mixer, NULL, NULL);
+
+    //加载
+    snd_mixer_load(mixer);
+
+    //获取第一个selem
+     elem = snd_mixer_first_elem(mixer);
+
+    snd_mixer_selem_get_playback_volume_range(elem, &min_value, &max_value);
+    printf("get volune range :min %d max %d\n", min_value, max_value);
+
+    snd_mixer_selem_get_playback_dB_range(elem, &min_value, &max_value);
+    printf("get db range :min %d max %d\n", min_value, max_value);
+    //设置音量范围
+    snd_mixer_selem_set_playback_volume_range(elem, 0, 255);
+    //获取左右声道的音量
+    snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, &value);
+    printf("left value :%d\n", value);
+
+    snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_RIGHT, &value);
+    printf("right value :%d\n", value); 
+
+    if(mode == 1)
+    {
+        printf("nanhe 123");
+        snd_mixer_selem_set_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, ctr_value);
+        snd_mixer_selem_set_playback_volume(elem, SND_MIXER_SCHN_FRONT_RIGHT, ctr_value);
+
+            snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, &value);
+    printf("123left value :%d\n", value);
+
+    snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_RIGHT, &value);
+    printf("123right value :%d\n", value); 
+
+    }
+
+}

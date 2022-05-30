@@ -27,7 +27,10 @@ int main(int argc, char *argv[])
     FILE *fp;
     int ret;
     char *buff = NULL;
+    int ctr_value = atoi(argv[3]);
+    int mode = atoi(argv[4]);
 
+    printf("nanhe mode:%d ctrl_value:%d\n", mode, ctr_value);
     char *wavefile = strdup(argv[1]);
     printf("wave file name:%s\n", wavefile);
     ret = Wave_Parse_Head(wavefile, &Head_file, &fp);
@@ -39,6 +42,7 @@ int main(int argc, char *argv[])
 
     //把wav获得参数配置给alsa
     //pcm.pcm_card_name = strdup(argv[2]);
+    //plguhw:0,0   card0 subdevice0
     strcpy(pcm.pcm_card_name, argv[2]);
     pcm.channel_num = Head_file.chanel_num;
     pcm.sample_rate = Head_file.sample_rate;
@@ -50,6 +54,9 @@ int main(int argc, char *argv[])
     pcm.frames = (pcm.period_szie * pcm.periods) >> 2;
 
     Alsa_Dev_init(&pcm);
+
+    //设置音量
+    Alsa_SetVolum(mode, ctr_value);
     //申请buff空间
     int buffsize = pcm.period_szie * pcm.periods;
     buff = (char *)malloc(buffsize);
@@ -57,6 +64,7 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr, "malloc fail\n");
         return -1;
+        
     }
 
     while(1)
